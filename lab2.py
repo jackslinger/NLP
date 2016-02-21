@@ -4,10 +4,11 @@ import numpy as np
 from random import shuffle
 import os
 
-FOLDER_PATH = '/home/jack/Downloads/txt_sentoken/'
+FOLDER_PATH = '/software/Python/NLP/txt_sentoken/'
 SAVE_FILE_NAME = 'review_vectors'
 LOAD_FROM_FILE = True
 SAVE_TO_FILE = True
+SHUFFLE = True
 
 def create_bag_of_words(file_path):
     file = open(FOLDER_PATH + file_path)
@@ -61,21 +62,22 @@ def compute_review_vectors():
 
     return vectors
 
-def perceptron_train(examples, weights):
-    for example in examples:
-        vector = example[0]
-        label = example[1]
+def perceptron_train(examples, weights, iterations=1):
+    for i in range(0,iterations):
+        for example in examples:
+            vector = example[0]
+            label = example[1]
 
-        raw_prediction = np.dot(weights, vector)
-        prediction = raw_prediction > 0
+            raw_prediction = np.dot(weights, vector)
+            prediction = raw_prediction > 0
 
-        if raw_prediction == 0:
-            weights = weights + vector
-        elif label != prediction:
-            if label:
+            if raw_prediction == 0:
                 weights = weights + vector
-            else:
-                weights = weights - vector
+            elif label != prediction:
+                if label:
+                    weights = weights + vector
+                else:
+                    weights = weights - vector
 
     return weights
 
@@ -89,6 +91,39 @@ def perceptron_test(examples, weights):
 
     return predictions
 
+#train = vectors[0:800] + vectors[1000:1800]
+#test = vectors[800:1000] + vectors[1800:2000]
+# print type(vectors)
+# print type(train)
+# print type(test)
+#
+#
+# train_pos = 0
+# train_neg = 0
+#
+# for i in range(0,len(train)):
+#     if train[i][1]:
+#         train_pos += 1
+#     else:
+#         train_neg += 1
+#
+# print 'Train total: ' + str(len(train))
+# print 'Train Positive: ' + str(train_pos)
+# print 'Train Negative: ' + str(train_neg)
+#
+# test_pos = 0
+# test_neg = 0
+#
+# for i in range(0,len(test)):
+#     if test[i][1]:
+#         test_pos += 1
+#     else:
+#         test_neg += 1
+#
+# print 'Test total: ' + str(len(test))
+# print 'Test Positive: ' + str(test_pos)
+# print 'Test Negative: ' + str(test_neg)
+
 if LOAD_FROM_FILE:
     try:
         print 'Loading vectors from ' + SAVE_FILE_NAME + '.npy'
@@ -100,19 +135,15 @@ if LOAD_FROM_FILE:
 else:
     vectors = compute_review_vectors()
 
-train = vectors[0:800] + vectors[1000:1800]
-test = vectors[800:1000] + vectors[1800:2000]
+train = np.concatenate((vectors[0:800], vectors[1000:1800]))
+test = np.concatenate((vectors[800:1000], vectors[1800:2000]))
 
-
-#read_array = np.load(FOLDER_PATH + 'stored_data.npy')
-
-shuffle(train)
-shuffle(test)
+if SHUFFLE:
+    np.random.shuffle(train)
+    np.random.shuffle(test)
 
 weights = np.zeros(len(vectors[0][0]))
-
-weights = perceptron_train(train, weights)
-
+weights = perceptron_train(train, weights, 20)
 predictions = perceptron_test(test, weights)
 
 correct = 0
@@ -134,10 +165,10 @@ for i in range(0,len(predictions)):
     elif not prediction and not actual:
         correct += 1
 
-print correct
-print pos
-print neg
+print 'Correct: ' + str(correct)
+print 'Positive: ' + str(pos)
+print 'Negative: ' + str(neg)
 
 accuracy = correct / float(len(predictions))
 
-print accuracy
+print 'Accuracy: ' + str(accuracy)
