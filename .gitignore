@@ -1,3 +1,4 @@
 /txt_sentoken
 *.npz
 /.ipynb_checkpoints/*
+*.bin
